@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+    <!-- Procédé pour ticket forfait -->
+    
+    <record id="process_process_ticket_forfait0" model="process.process">
+        <field eval="1" name="active"/>
+        <field name="name">"Process ticket forfait"</field>
+    </record>
+
+    <!-- étapes du procédé -->
+
+    <record id="process_node_ticket_forfait_analyse" model="process.node">
+ <field eval="&quot;&quot;&quot;Analyse&quot;&quot;&quot;" name="name"/>        
+    <field name="kind" eval="&quot;&quot;&quot;state&quot;&quot;&quot;"/>
+        <field name="process_id" ref="process_process_ticket_forfait0"/>
+        <field name="model_states" eval="&quot;&quot;&quot;object.state_dev in 
+        ('draft', 'open', 'pending', 'done', 'cancel')&quot;&quot;&quot;"/>
+        <field eval="1" name="flow_start"/>
+    </record>
+    
+    <record id="process_node_ticket_forfait_dev" model="process.node">
+ <field eval="&quot;&quot;&quot;Dev&quot;&quot;&quot;" name="name"/>
+<field name="kind" eval="&quot;&quot;&quot;state&quot;&quot;&quot;"/>
+        <field name="process_id" ref="process_process_ticket_forfait0"/>
+        <field name="model_states" eval="&quot;&quot;&quot;object.state_dev in 
+        ('draft', 'open', 'pending', 'done', 'cancel')&quot;&quot;&quot;"/>
+        <field name="flow_start" eval="0"/>    
+    </record>
+
+    <record id="process_node_ticket_forfait_test" model="process.node">
+ <field eval="&quot;&quot;&quot;Test&quot;&quot;&quot;" name="name"/>
+<field name="kind" eval="&quot;&quot;&quot;state&quot;&quot;&quot;"/>        
+<field name="process_id" ref="process_process_ticket_forfait0"/>
+        <field name="model_states" eval="&quot;&quot;&quot;object.state_dev in 
+        ('draft', 'open', 'pending', 'done', 'cancel')&quot;&quot;&quot;"/>
+        <field eval="0" name="flow_start"/>
+    </record>
+    
+    <record id="process_node_ticket_forfait_livraison" model="process.node">
+<field name="kind" eval="&quot;&quot;&quot;state&quot;&quot;&quot;"/>
+ <field eval="&quot;&quot;&quot;Livraison&quot;&quot;&quot;" name="name"/>        
+<field name="process_id" ref="process_process_ticket_forfait0"/>
+        <field name="model_states" eval="&quot;&quot;&quot;object.state_dev in 
+        ('draft', 'open', 'pending', 'done', 'cancel')&quot;&quot;&quot;"/>
+        <field eval="0" name="flow_start"/>
+    </record>
+    
+    <record id="process_node_ticket_forfait_accepted" model="process.node">
+<field name="kind" eval="&quot;&quot;&quot;state&quot;&quot;&quot;"/>
+ <field eval="&quot;&quot;&quot;Accepted&quot;&quot;&quot;" name="name"/>
+        <field name="process_id" ref="process_process_ticket_forfait0"/>
+        <field name="model_states" eval="&quot;&quot;&quot;object.state_dev in 
+        ('draft', 'open', 'pending', 'done', 'cancel')&quot;&quot;&quot;"/>
+        <field eval="0" name="flow_start"/>
+    </record>
+    
+    <record id="process_node_ticket_forfait_rejected" model="process.node">
+<field name="kind" eval="&quot;&quot;&quot;state&quot;&quot;&quot;"/>
+ <field eval="&quot;&quot;&quot;Refused&quot;&quot;&quot;" name="name"/>
+        <field name="process_id" ref="process_process_ticket_forfait0"/>
+        <field name="model_states" eval="&quot;&quot;&quot;object.state_dev in 
+        ('draft', 'open', 'pending', 'done', 'cancel')&quot;&quot;&quot;"/>
+        <field eval="0" name="flow_start"/>
+    </record>
+    
+    <record id="process_node_ticket_forfait_overload" model="process.node">
+<field name="kind" eval="&quot;&quot;&quot;state&quot;&quot;&quot;"/>
+ <field eval="&quot;&quot;&quot;Overload&quot;&quot;&quot;" name="name"/>
+        <field name="process_id" ref="process_process_ticket_forfait0"/>
+        <field name="model_states" eval="&quot;&quot;&quot;object.state_dev in 
+        ('draft', 'open', 'pending', 'done', 'cancel')&quot;&quot;&quot;"/>
+        <field eval="0" name="flow_start"/>
+    </record>
+    
+    <record id="process_node_ticket_forfait_abandon" model="process.node">
+<field name="kind" eval="&quot;&quot;&quot;state&quot;&quot;&quot;"/>
+ <field eval="&quot;&quot;&quot;Abandon&quot;&quot;&quot;" name="name"/>
+        <field name="process_id" ref="process_process_ticket_forfait0"/>
+        <field name="model_states" eval="&quot;&quot;&quot;object.state_dev in 
+        ('cancel', 'done')&quot;&quot;&quot;"/>
+        <field eval="0" name="flow_start"/>
+    </record>
+    
+   
+    <!--
+    transitions possibles
+    attention a l'ordre target_node_id et source_node_id
+    -->
+    
+    <record id="process_transition_ticket_forfait_analyse_dev" 
+            model="process.transition">
+        <field name="name">nom</field>
+        <field name="transition_id" eval="[(6,0,[])]"/>
+        <field name="target_node_id" model="process.node" 
+               ref="process_node_ticket_forfait_dev"/>
+        <field name="source_node_id" model="process.node" 
+               ref="process_node_ticket_forfait_analyse"/>
+    </record>
+
+    <record id="process_transition_ticket_forfait_dev_test"
+            model="process.transition">
+        <field name="name">nom</field>
+        <field name="transition_id" eval="[(6,0,[])]"/>
+        <field name="target_node_id" model="process.node" 
+               ref="process_node_ticket_forfait_test"/>
+        <field name="source_node_id" model="process.node" 
+               ref="process_node_ticket_forfait_dev"/>
+    </record>
+    
+    <record id="process_transition_ticket_forfait_livraison_accepted"
+            model="process.transition">
+        <field name="name">nom</field>
+        <field name="transition_id" eval="[(6,0,[])]"/>
+        <field name="target_node_id" model="process.node" 
+               ref="process_node_ticket_forfait_accepted"/>
+        <field name="source_node_id" model="process.node" 
+               ref="process_node_ticket_forfait_livraison"/>
+    </record>
+
+    <record id="process_transition_ticket_forfait_dev_overload"     
+            model="process.transition">
+        <field name="name">nom</field>
+        <field name="transition_id" eval="[(6,0,[])]"/>
+        <field name="target_node_id" model="process.node" 
+               ref="process_node_ticket_forfait_overload"/>
+        <field name="source_node_id" model="process.node" 
+               ref="process_node_ticket_forfait_dev"/>
+    </record>
+
+    <record id="process_transition_ticket_forfait_overload_dev" 
+            model="process.transition">
+        <field name="name">nom</field>
+        <field name="transition_id" eval="[(6,0,[])]"/>
+        <field name="target_node_id" model="process.node" 
+               ref="process_node_ticket_forfait_dev"/>
+        <field name="source_node_id" model="process.node" 
+               ref="process_node_ticket_forfait_overload"/>
+    </record>
+
+    <record id="process_transition_ticket_forfait_dev_abandon" 
+            model="process.transition">
+        <field name="name">nom</field>
+        <field name="transition_id" eval="[(6,0,[])]"/>
+        <field name="target_node_id" model="process.node" 
+               ref="process_node_ticket_forfait_abandon"/>
+        <field name="source_node_id" model="process.node" 
+               ref="process_node_ticket_forfait_dev"/>
+    </record>
+
+    <record id="process_transition_ticket_forfait_test_dev"
+            model="process.transition">
+        <field name="name">nom</field>
+        <field name="transition_id" eval="[(6,0,[])]"/>
+        <field name="target_node_id" model="process.node" 
+               ref="process_node_ticket_forfait_dev"/>
+        <field name="source_node_id" model="process.node" 
+               ref="process_node_ticket_forfait_test"/>
+    </record>
+
+    <record id="process_transition_ticket_forfait_dev_livraison"
+            model="process.transition">
+        <field name="name">nom</field>
+        <field name="transition_id" eval="[(6,0,[])]"/>
+        <field name="target_node_id" model="process.node" 
+               ref="process_node_ticket_forfait_livraison"/>
+        <field name="source_node_id" model="process.node" 
+               ref="process_node_ticket_forfait_dev"/>
+    </record>
+
+    <record id="process_transition_ticket_forfait_test_livraison"
+            model="process.transition">
+        <field name="name">nom</field>
+        <field name="transition_id" eval="[(6,0,[])]"/>
+        <field name="target_node_id" model="process.node" 
+               ref="process_node_ticket_forfait_livraison"/>
+        <field name="source_node_id" model="process.node" 
+               ref="process_node_ticket_forfait_test"/>
+    </record>
+
+    <record id="process_transition_ticket_forfait_livraison_rejected"
+            model="process.transition">
+        <field name="name">nom</field>
+        <field name="transition_id" eval="[(6,0,[])]"/>
+        <field name="target_node_id" model="process.node" 
+               ref="process_node_ticket_forfait_rejected"/>
+        <field name="source_node_id" model="process.node" 
+               ref="process_node_ticket_forfait_livraison"/>
+    </record>
+
+    <record id="process_transition_ticket_forfait_rejected_dev"
+            model="process.transition">
+        <field name="name">nom</field>
+        <field name="transition_id" eval="[(6,0,[])]"/>
+        <field name="target_node_id" model="process.node" 
+               ref="process_node_ticket_forfait_dev"/>
+        <field name="source_node_id" model="process.node" 
+               ref="process_node_ticket_forfait_rejected"/>
+    </record>
+
+    <!-- 
+        Actions sur les etapes du processus
+    -->
+
+    </data>
+</openerp>
+

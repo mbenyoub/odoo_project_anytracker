@@ -37,6 +37,8 @@
                 <field name="projectroot"/>
                 <field name="child_ids"/>
                 <field name="siblings"/>
+                <field name="state_dev"/>
+                <field name="bidule"/>
             </form>
         </field>
     </record>

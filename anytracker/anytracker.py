@@ -78,6 +78,11 @@ class ticket(osv.osv):
     'requester_id' : fields.many2one('res.users', 'Requester'),
     'complexity_id' : fields.many2one('anytracker.ticket.complexity','complexity'),
     'workflow_id' : fields.many2one('anytracker.ticket.workflow1','kanban_status',required=True),
+    'state_dev' : fields.selection([('draft', 'New'),('open', 'In Progress'),('pending', 'Pending'), ('done', 'Done'), ('cancelled', 'Cancelled')], 'state_dev'),
+    'bidule' :  fields.selection([
+                    (0,'< half a day'),(None,'Will be computed'),
+                (1,'Half a day')],'bidule'),
+
 }
     #complexity should be a many2many table, so a as to make is possibilble for various users (assignees) to rate different tickets.
     _defaults = {
