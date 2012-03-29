@@ -72,7 +72,7 @@
     
     <record id="process_transition_ticket_tma_new_accepted" 
             model="process.transition">
-        <field name="name">nom</field>
+        <field name="name">prendre en compte</field>
         <field name="transition_id" eval="[(6,0,[])]"/>
         <field name="source_node_id" model="process.node" 
                ref="process_node_ticket_tma_new"/>
@@ -82,7 +82,7 @@
 
     <record id="process_transition_ticket_tma_new_invalid" 
             model="process.transition">
-        <field name="name">nom</field>
+        <field name="name">invalider</field>
         <field name="transition_id" eval="[(6,0,[])]"/>
         <field name="source_node_id" model="process.node" 
                ref="process_node_ticket_tma_new"/>
@@ -92,7 +92,7 @@
 
     <record id="process_transition_ticket_tma_accepted_solved" 
             model="process.transition">
-        <field name="name">nom</field>
+        <field name="name">résoudre</field>
         <field name="transition_id" eval="[(6,0,[])]"/>
         <field name="source_node_id" model="process.node" 
                ref="process_node_ticket_tma_accepted"/>
@@ -102,7 +102,7 @@
     
     <record id="process_transition_ticket_tma_accepted_workaround" 
             model="process.transition">
-        <field name="name">nom</field>
+        <field name="name">contourner</field>
         <field name="transition_id" eval="[(6,0,[])]"/>
         <field name="source_node_id" model="process.node" 
                ref="process_node_ticket_tma_accepted"/>
@@ -112,7 +112,7 @@
     
     <record id="process_transition_ticket_tma_solved_closed" 
             model="process.transition">
-        <field name="name">nom</field>
+        <field name="name">fermer</field>
         <field name="transition_id" eval="[(6,0,[])]"/>
         <field name="source_node_id" model="process.node" 
                ref="process_node_ticket_tma_solved"/>
@@ -122,7 +122,7 @@
     
     <record id="process_transition_ticket_tma_solved_new" 
             model="process.transition">
-        <field name="name">nom</field>
+        <field name="name">renouveler</field>
         <field name="transition_id" eval="[(6,0,[])]"/>
         <field name="source_node_id" model="process.node" 
                ref="process_node_ticket_tma_solved"/>
@@ -132,7 +132,7 @@
     
     <record id="process_transition_ticket_tma_workaround_closed" 
             model="process.transition">
-        <field name="name">nom</field>
+        <field name="name">fermer le contournement</field>
         <field name="transition_id" eval="[(6,0,[])]"/>
         <field name="source_node_id" model="process.node" 
                ref="process_node_ticket_tma_workaround"/>
@@ -142,7 +142,7 @@
 
     <record id="process_transition_ticket_tma_invalid_new" 
             model="process.transition">
-        <field name="name">nom</field>
+        <field name="name">requalifer</field>
         <field name="transition_id" eval="[(6,0,[])]"/>
         <field name="source_node_id" model="process.node" 
                ref="process_node_ticket_tma_invalid"/>
@@ -152,7 +152,7 @@
 
     <record id="process_transition_ticket_tma_invalid_closed" 
             model="process.transition">
-        <field name="name">nom</field>
+        <field name="name">fermer un invalide</field>
         <field name="transition_id" eval="[(6,0,[])]"/>
         <field name="source_node_id" model="process.node" 
                ref="process_node_ticket_tma_invalid"/>
