@@ -12,7 +12,7 @@
                 'anytracker_view.xml',
                 'ticket_data.xml',
                 'process/process_forfait.xml',
-                ],
+                'process/process_tma.xml'],
     'active': False,
     'installable': True
 }

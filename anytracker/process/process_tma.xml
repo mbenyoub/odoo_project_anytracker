@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+    <!-- Procédé pour ticket forfait -->
+    
+    <record id="process_process_ticket_tma" model="process.process">
+        <field eval="1" name="active"/>
+        <field name="name">TMA Ticket Process</field>
+    </record>
+
+    <!-- étapes du procédé -->
+
+    <record id="process_node_ticket_tma_new" model="process.node">
+ <field eval="&quot;&quot;&quot;New&quot;&quot;&quot;" name="name"/>        
+    <field name="kind" eval="&quot;&quot;&quot;state&quot;&quot;&quot;"/>
+        <field name="process_id" ref="process_process_ticket_tma"/>
+        <field name="model_states" eval="&quot;&quot;&quot;object.state_dev in 
+        ('draft', 'open', 'pending', 'done', 'cancel')&quot;&quot;&quot;"/>
+        <field eval="1" name="flow_start"/>
+    </record>
+
+    <record id="process_node_ticket_tma_invalid" model="process.node">
+ <field eval="&quot;&quot;&quot;invalid&quot;&quot;&quot;" name="name"/>        
+    <field name="kind" eval="&quot;&quot;&quot;state&quot;&quot;&quot;"/>
+        <field name="process_id" ref="process_process_ticket_tma"/>
+        <field name="model_states" eval="&quot;&quot;&quot;object.state_dev in 
+        ('draft', 'open', 'pending', 'done', 'cancel')&quot;&quot;&quot;"/>
+        <field eval="0" name="flow_start"/>
+    </record>
+
+    <record id="process_node_ticket_tma_accepted" model="process.node">
+ <field eval="&quot;&quot;&quot;accepted&quot;&quot;&quot;" name="name"/>        
+    <field name="kind" eval="&quot;&quot;&quot;state&quot;&quot;&quot;"/>
+        <field name="process_id" ref="process_process_ticket_tma"/>
+        <field name="model_states" eval="&quot;&quot;&quot;object.state_dev in 
+        ('draft', 'open', 'pending', 'done', 'cancel')&quot;&quot;&quot;"/>
+        <field eval="0" name="flow_start"/>
+    </record>
+
+    <record id="process_node_ticket_tma_solved" model="process.node">
+ <field eval="&quot;&quot;&quot;solved&quot;&quot;&quot;" name="name"/>        
+    <field name="kind" eval="&quot;&quot;&quot;state&quot;&quot;&quot;"/>
+        <field name="process_id" ref="process_process_ticket_tma"/>
+        <field name="model_states" eval="&quot;&quot;&quot;object.state_dev in 
+        ('draft', 'open', 'pending', 'done', 'cancel')&quot;&quot;&quot;"/>
+        <field eval="0" name="flow_start"/>
+    </record>
+
+    <record id="process_node_ticket_tma_workaround" model="process.node">
+    <field eval="&quot;&quot;&quot;workaround&quot;&quot;&quot;" name="name"/>        
+    <field name="kind" eval="&quot;&quot;&quot;state&quot;&quot;&quot;"/>
+        <field name="process_id" ref="process_process_ticket_tma"/>
+        <field name="model_states" eval="&quot;&quot;&quot;object.state_dev in 
+        ('draft', 'open', 'pending', 'done', 'cancel')&quot;&quot;&quot;"/>
+        <field eval="0" name="flow_start"/>
+    </record>
+
+    <record id="process_node_ticket_tma_closed" model="process.node">
+    <field eval="&quot;&quot;&quot;closed&quot;&quot;&quot;" name="name"/>        
+    <field name="kind" eval="&quot;&quot;&quot;state&quot;&quot;&quot;"/>
+        <field name="process_id" ref="process_process_ticket_tma"/>
+        <field name="model_states" eval="&quot;&quot;&quot;object.state_dev in 
+        ('draft', 'open', 'pending', 'done', 'cancel')&quot;&quot;&quot;"/>
+        <field eval="0" name="flow_start"/>
+    </record>
+
+    <!--
+    transitions possibles
+    attention a l'ordre target_node_id et source_node_id, ici "corrigé" (i.e.dans un
+    ordre facile pour la relecture) par rapport au forfait
+    -->
+    
+    <record id="process_transition_ticket_tma_new_accepted" 
+            model="process.transition">
+        <field name="name">nom</field>
+        <field name="transition_id" eval="[(6,0,[])]"/>
+        <field name="source_node_id" model="process.node" 
+               ref="process_node_ticket_tma_new"/>
+        <field name="target_node_id" model="process.node" 
+               ref="process_node_ticket_tma_accepted"/>
+    </record>
+
+    <record id="process_transition_ticket_tma_new_invalid" 
+            model="process.transition">
+        <field name="name">nom</field>
+        <field name="transition_id" eval="[(6,0,[])]"/>
+        <field name="source_node_id" model="process.node" 
+               ref="process_node_ticket_tma_new"/>
+        <field name="target_node_id" model="process.node" 
+               ref="process_node_ticket_tma_invalid"/>
+    </record>
+
+    <record id="process_transition_ticket_tma_accepted_solved" 
+            model="process.transition">
+        <field name="name">nom</field>
+        <field name="transition_id" eval="[(6,0,[])]"/>
+        <field name="source_node_id" model="process.node" 
+               ref="process_node_ticket_tma_accepted"/>
+        <field name="target_node_id" model="process.node" 
+               ref="process_node_ticket_tma_solved"/>
+    </record>
+    
+    <record id="process_transition_ticket_tma_accepted_workaround" 
+            model="process.transition">
+        <field name="name">nom</field>
+        <field name="transition_id" eval="[(6,0,[])]"/>
+        <field name="source_node_id" model="process.node" 
+               ref="process_node_ticket_tma_accepted"/>
+        <field name="target_node_id" model="process.node" 
+               ref="process_node_ticket_tma_workaround"/>
+    </record>
+    
+    <record id="process_transition_ticket_tma_solved_closed" 
+            model="process.transition">
+        <field name="name">nom</field>
+        <field name="transition_id" eval="[(6,0,[])]"/>
+        <field name="source_node_id" model="process.node" 
+               ref="process_node_ticket_tma_solved"/>
+        <field name="target_node_id" model="process.node" 
+               ref="process_node_ticket_tma_closed"/>
+    </record>
+    
+    <record id="process_transition_ticket_tma_solved_new" 
+            model="process.transition">
+        <field name="name">nom</field>
+        <field name="transition_id" eval="[(6,0,[])]"/>
+        <field name="source_node_id" model="process.node" 
+               ref="process_node_ticket_tma_solved"/>
+        <field name="target_node_id" model="process.node" 
+               ref="process_node_ticket_tma_new"/>
+    </record>
+    
+    <record id="process_transition_ticket_tma_workaround_closed" 
+            model="process.transition">
+        <field name="name">nom</field>
+        <field name="transition_id" eval="[(6,0,[])]"/>
+        <field name="source_node_id" model="process.node" 
+               ref="process_node_ticket_tma_workaround"/>
+        <field name="target_node_id" model="process.node" 
+               ref="process_node_ticket_tma_closed"/>
+    </record>
+
+    <record id="process_transition_ticket_tma_invalid_new" 
+            model="process.transition">
+        <field name="name">nom</field>
+        <field name="transition_id" eval="[(6,0,[])]"/>
+        <field name="source_node_id" model="process.node" 
+               ref="process_node_ticket_tma_invalid"/>
+        <field name="target_node_id" model="process.node" 
+               ref="process_node_ticket_tma_new"/>
+    </record>
+
+    <record id="process_transition_ticket_tma_invalid_closed" 
+            model="process.transition">
+        <field name="name">nom</field>
+        <field name="transition_id" eval="[(6,0,[])]"/>
+        <field name="source_node_id" model="process.node" 
+               ref="process_node_ticket_tma_invalid"/>
+        <field name="target_node_id" model="process.node" 
+               ref="process_node_ticket_tma_closed"/>
+    </record>
+
+   </data>
+</openerp>
