@@ -41,7 +41,7 @@ workflow1()
 
 
 
-class ticket(osv.osv):
+class Ticket(osv.osv):
     _name = 'anytracker.ticket'
     _description = "Tickets for project management" 
     def siblings(self, cr, uid, ids, field_name, args, context=None):
@@ -55,21 +55,21 @@ class ticket(osv.osv):
             res[t.id]  = False
             if t.parent_id.id != False:
                 res[t.id]  = t.parent_id.id
-                bros = [ b.id for b in t.parent_id.child_ids ]
+                bros = [ b.id for b in t.parent_id.children_ids ]
                 bros.remove(t.id)
                 res[t.id] = bros
         return res
 
     _columns = {
     'name' : fields.char('task name', 255, required=True),
-    'infos' : fields.text('task description', required=False),
+    'description' : fields.text('task description', required=False),
     'state' : fields.char('state', 30, required=False),
     'siblings' : fields.function(siblings, type='many2many', obj='anytracker.ticket', string = 'Siblings', method =True ),
     'projectroot' : fields.boolean('is the root node', required=False),
     'duration' :  fields.selection([
                     (0,'< half a day'),(None,'Will be computed'),
                 (1,'Half a day')],'duration'),
-    'child_ids' : fields.one2many('anytracker.ticket', 'parent_id','children', required=False),
+    'children_ids' : fields.one2many('anytracker.ticket', 'parent_id','children', required=False),
     'assignedto_ids' : fields.many2many('res.users', 'ticket_assignement_rel' ,'ticket_id','user_id', required=False),
     'date_ids' : fields.many2many('wf.activity','ticket_date_rel', 'some_id','dates'),
     'parent_id' : fields.many2one('anytracker.ticket','parent', required=False),
@@ -145,19 +145,18 @@ class ticket(osv.osv):
         self.write(cr, uid, ids, {'root': True},context=context)
 
     def _check_roots(self, cr, uid, ids, context=None):
+        """
+        Devrait renvoyer Bool,roots afin de de pas appeler deux fois _roots
+        une fois pour la verif et une fois pour savoir quels sont les noeuds
+        en cause
+        """
         roots = _roots(self, cd, uid, ids, context=context)
         if len(roots) == 1:
             return True
         else:
             return False
 
-#=========================================================================
-#Devrait renvoyer Bool,roots afin de de pas appeler deux fois _roots
-#une fois pour la verif et une fois pour savoir quels sont les noeuds
-#en cause
-#========================================================================
-  
-ticket()
 
+Ticket()
 
 
