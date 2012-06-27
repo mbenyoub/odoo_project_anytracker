@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+    <data>
+        <record id="method_implementation" model="anytracker.method">
+            <field name="code">implementation</field>
+            <field name="name">Implementation</field>
+        </record>
+        <record id="method_maintenance" model="anytracker.method">
+            <field name="code">maintenance</field>
+            <field name="name">Maintenance</field>
+        </record>
+        <record id="method_scrum" model="anytracker.method">
+            <field name="code">scrum</field>
+            <field name="name">Scrum</field>
+        </record>
+    </data>
+</openerp>
