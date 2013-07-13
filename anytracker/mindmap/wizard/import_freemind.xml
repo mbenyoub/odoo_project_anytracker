@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openerp>
+    <data>
+        <record id="view_import_freemind_form" model="ir.ui.view">
+            <field name="name">import freemind wizard form</field>
+            <field name="model">import.freemind.wizard</field>
+            <field name="type">form</field>
+            <field name="priority" eval="8"/>
+            <field name="arch" type="xml">
+                <form string="Import freemind map">
+                    <group colspan="4" col="2">
+                        <field name="mindmap_content" select="1" string="File mindmap to upload" />
+                        <separator string="" colspan="4"/>
+                        <field name="method_id"/>
+                        <separator string="" colspan="4"/>
+                        <field name="import_method"/>
+                        <field name="ticket_id"/>
+                        <separator string="" colspan="4"/>
+                        <field name="green_complexity" string="complexity level for green flag" />
+                        <field name="orange_complexity" string="complexity level for orange flag"/>
+                        <field name="red_complexity" string="complexity level for red flag"/>
+                        <separator string="" colspan="4" />
+                    </group>
+                    <group colspan="4" col="8">
+                        <label string ="" colspan="2"/>
+                        <button icon="gtk-cancel" special="cancel" string="Cancel"/>
+                        <button icon="terp-gtk-go-back-rtl" string="Import file" name="execute_import" type="object"/>
+                    </group>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="action_import_freemind_view">
+            <field name="name">Import freemind map</field>
+            <field name="type">ir.actions.act_window</field>
+            <field name="res_model">import.freemind.wizard</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">form</field>
+            <field name="domain">[]</field>
+            <field name="context" eval="{'default_green_complexity': ref('anytracker.complexity_implementation_green'),
+                                          'default_orange_complexity': ref('anytracker.complexity_implementation_orange'),
+                                          'default_red_complexity': ref('anytracker.complexity_implementation_red'),
+                                        }" />
+            <field name="target">new</field>
+        </record>
+
+        <menuitem id="menu_import_freemind_wizard"
+            parent="tickets"
+            sequence="40"
+            action="action_import_freemind_view"/>
+
+    </data>
+</openerp>
