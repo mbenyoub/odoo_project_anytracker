@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+<data>
+<!-- COMPLEXITY -->
+<record id="view_complexity_search" model="ir.ui.view">
+    <field name="name">anytracker.complexity.search</field>
+    <field name="model">anytracker.complexity</field>
+    <field name="type">search</field>
+    <field name="priority" eval="8"/>
+    <field name="arch" type="xml">
+    <search string="Complexities">
+        <filter name="complexities_by_method"
+            string="By method"
+            context="{'group_by': 'method_id'}"
+            icon="gtk-indent"
+            help="Group by method"/>
+    </search>
+    </field>
+</record>
+<record id="view_complexity_tree" model="ir.ui.view">
+    <field name="name">anytracker.complexity.tree</field>
+    <field name="model">anytracker.complexity</field>
+    <field name="type">tree</field>
+    <field name="priority" eval="8"/>
+    <field name="arch" type="xml">
+    <tree string="Complexities">
+        <field name="name"/>
+        <field name="value"/>
+        <field name="color"/>
+        <field name="method_id"/>
+        <field name="risk"/>
+    </tree>
+    </field>
+</record>
+
+<record id="view_complexity_form" model="ir.ui.view">
+    <field name="name">anytracker.complexity.form</field>
+    <field name="model">anytracker.complexity</field>
+    <field name="type">form</field>
+    <field name="priority" eval="8"/>
+    <field name="arch" type="xml">
+    <form string="Complexity">
+      <group col="2" colspan="2">
+        <group col="2" colspan="2">
+          <field name="name" select="1"/>
+          <field name="description"/>
+        </group>
+        <group col="2" colspan="2">
+          <field name="value"/>
+          <field name="color" />
+          <field name="method_id" widget="selection"/>
+          <field name="risk"/>
+        </group>
+      </group>
+    </form>
+    </field>
+</record>
+
+<!-- ADD A TAB IN TICKET FORM -->
+<record id="ticket_view_form_with_complexity" model="ir.ui.view">
+    <field name="name">Ticket</field>
+    <field name="model">anytracker.ticket</field>
+    <field name="inherit_id" ref="ticket_view_form" />
+    <field name="arch" type="xml">
+        <xpath expr="/form/notebook/page[@string='Participants']" position="after">
+            <page string="Ratings">
+            <group col="6" colspan="4">
+                <field name="my_rating" attrs="{'invisible': [('child_ids', '!=', False)]}" groups="anytracker.group_member" options='{"quick_create": false}' domain="[('method_id','=',method_id)]"/>
+                <button string="Rate subtickets..." icon="gtk-execute" type="action" name="%(action_quickrating)d" attrs="{'invisible': [('child_ids', '=', False)]}" groups="anytracker.group_member"/>
+                <field name="risk" string="Risk level" readonly="1"/>
+                <button name="recompute_risk" string="Recompute risk"
+                        type="object" icon="gtk-execute" attrs="{'invisible': [('child_ids', '=', False)]}" groups="anytracker.group_manager"/>
+
+            </group>
+            <group col="6" colspan="4" attrs="{'invisible': [('child_ids', '!=', False)]}">
+              <label>Here are all the ratings made for this ticket:</label>
+              <field name="rating_ids" nolabel="1" colspan="4" readonly="1">
+                <tree string="Ratings">
+                  <field name="user_id"/>
+                  <field name="complexity_id"/>
+                  <field name="time"/>
+                </tree>
+              </field>
+            </group>
+            </page>
+        </xpath>
+    </field>
+</record>
+
+<record id="ticket_view_tree_with_complexity" model="ir.ui.view">
+    <field name="name">Ticket</field>
+    <field name="model">anytracker.ticket</field>
+    <field name="inherit_id" ref="ticket_view_tree" />
+    <field name="arch" type="xml">
+        <xpath expr="/tree/field[@name='shortened_description']" position="after">
+            <field name="my_rating"/>
+            <button string="Rate subtickets" icon="gtk-execute" type="action" name="%(action_quickrating)d"/>
+            <field name="risk" string="Risk level" />
+        </xpath>
+    </field>
+</record>
+
+<record id="tickets_hierarchy_with_complexity" model="ir.ui.view">
+    <field name="name">anytracker.ticket.hierarchy</field>
+    <field name="model">anytracker.ticket</field>
+    <field name="inherit_id" ref="tickets_hierarchy" />
+    <field name="arch" type="xml">
+        <xpath expr="/tree/field[@name='nb_children']" position="after">
+            <field name="risk" string="Risk"/>
+        </xpath>
+    </field>
+</record>
+
+
+<record model="ir.actions.act_window" id="act_open_complexity_view">
+    <field name="name">Complexities</field>
+    <field name="type">ir.actions.act_window</field>
+    <field name="res_model">anytracker.complexity</field>
+    <field name="view_type">form</field>
+    <field name="view_mode">tree,form</field>
+    <field name="domain">[]</field>
+    <field name="context">{'search_default_complexities_by_method': 1}</field>
+</record>
+
+<record model="ir.actions.act_window.view" id="act_open_complexity_view_form">
+    <field name="act_window_id" ref="act_open_complexity_view"/>
+    <field name="sequence" eval="20"/>
+    <field name="view_mode">form</field>
+    <field name="view_id" ref="view_complexity_form"/>
+</record>
+
+<record model="ir.actions.act_window.view" id="act_open_complexity_view_tree">
+    <field name="act_window_id" ref="act_open_complexity_view"/>
+    <field name="sequence" eval="10"/>
+    <field name="view_mode">tree</field>
+    <field name="view_id" ref="view_complexity_tree"/>
+</record>
+
+<menuitem id="menu_complexity"
+    parent="configuration"
+    sequence="20"
+    groups="group_manager"
+    action="act_open_complexity_view"/>
+</data>
+</openerp>
