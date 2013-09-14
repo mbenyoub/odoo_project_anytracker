@@ -10,6 +10,7 @@ class Ticket(osv.Model):
     _rec_name = 'breadcrumb'
     _order = 'create_date DESC'
     _parent_store = True
+    _inherit = ['mail.thread', 'ir.needaction_mixin']
 
     def _get_siblings(self, cr, uid, ids, field_name, args, context=None):
         """ get tickets at the same hierachical level
@@ -23,25 +24,26 @@ class Ticket(osv.Model):
             res[ticket.id] = self.search(cr, uid, domain, context=context)
         return res
 
-    def _shorten_description(self, cr, uid, ids, field_name, args, context=None):
+    def _shortened_description(self, cr, uid, ids, field_name, args, context=None):
         """shortened description
         """
         res = {}
-        for ticket in self.browse(cr, uid, ids, context):
-            descr = ticket.description or ''
-            res[ticket.id] = descr[:200] + u'(…)' if len(descr) > 200 else descr
+        limit = 150
+        for ticket in self.read(cr, uid, ids, ['id', 'description'], context):
+            descr = ticket['description'] or ''
+            res[ticket['id']] = descr[:limit] + u'(…)' if len(descr) > limit else descr
         return res
 
     def _kanban_description(self, cr, uid, ids, field_name, args, context=None):
         """shortened description for the kanban
         """
         res = {}
-        for ticket in self.browse(cr, uid, ids, context):
-            lines = (ticket.description or '').splitlines()
+        for ticket in self.read(cr, uid, ids, ['id', 'description'], context):
+            lines = (ticket['description'] or '').splitlines()
             if len(lines) > 5:
                 lines = lines[:5]
                 lines.append(u'(…)')
-            res[ticket.id] = '<br/>'.join(lines)
+            res[ticket['id']] = '<br/>'.join(lines)
         return res
 
     def _breadcrumb(self, cr, uid, ids, context=None):
@@ -202,7 +204,7 @@ class Ticket(osv.Model):
         'create_date': fields.datetime('Creation Time'),
         'write_date': fields.datetime('Modification Time'),
         'shortened_description': fields.function(
-            _shorten_description,
+            _shortened_description,
             type='text',
             obj='anytracker.ticket',
             string='Description'),
@@ -239,7 +241,7 @@ class Ticket(osv.Model):
             store=False, help='Number of children'),
         'participant_ids': fields.many2many(
             'res.users',
-            'ticket_assignement_rel',
+            'anytracker_ticket_assignment_rel',
             'ticket_id',
             'user_id',
             required=False),
