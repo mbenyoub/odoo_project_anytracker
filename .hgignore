@@ -1,0 +1,10 @@
+syntax: glob
+*.mo
+*.swp
+*.pyc
+*.pyo
+*.log
+*\#
+*.\#*
+*~
+*.orig
