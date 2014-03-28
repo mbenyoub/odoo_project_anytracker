@@ -17,7 +17,8 @@ class Priority(osv.Model):
         'description': fields.text('Priority description', translate=True),
         'seq': fields.integer('Priority', help='a low value is higher priority'),
         'active': fields.boolean('Active', help='if check, this object is always available'),
-        'method_id': fields.many2one('anytracker.method', 'Method', required=True),
+        'method_id': fields.many2one('anytracker.method', 'Method',
+                                     required=True, ondelete='cascade'),
         'deadline': fields.boolean('Force to choose a deadline on the ticket?'),
         'date': fields.date('Milestone'),
     }
