@@ -17,9 +17,9 @@ class TestComplexity(SharedSetupTransactionCase):
         self.user = self.registry('res.users')
         self.rating_mdl = self.registry('anytracker.rating')
 
-        self.complexity_2h = self.ref('anytracker.anytracker_complexity-2h')
-        self.complexity_4h = self.ref('anytracker.anytracker_complexity-4h')
-        self.complexity_1j = self.ref('anytracker.anytracker_complexity-1_jour')
+        self.complexity_2h = self.ref('anytracker.complexity_2h')
+        self.complexity_4h = self.ref('anytracker.complexity_4h')
+        self.complexity_1j = self.ref('anytracker.complexity_1j')
         self.member_id = self.user.create(
             cr, uid,
             {'name': 'Member',
