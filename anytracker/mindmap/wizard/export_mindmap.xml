@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<openerp>
+    <data>
+        <record id="view_export_mindmap_form" model="ir.ui.view">
+            <field name="name">export mindmap wizard form</field>
+            <field name="model">export.mindmap.wizard</field>
+            <field name="priority" eval="8"/>
+            <field name="arch" type="xml">
+                <form string="export mindmap map">
+                    <group colspan="4" col="2">
+                        <field name="mindmap_file" select="1" string="File mindmap to write" />
+                        <separator string="" colspan="4" />
+                        <field name="ticket_id" string="Parent ticket"/>
+                        <separator string="" colspan="4" />
+                        <field name="green_complexity" string="complexity level for green flag"/>
+                        <field name="orange_complexity" string="complexity level for orange flag"/>
+                        <field name="red_complexity" string="complexity level for red flag"/>
+                        <separator string="" colspan="4" />
+                    </group>
+                    <group colspan="4" col="6">
+                        <label string ="" colspan="2"/>
+                        <button icon="gtk-cancel" special="cancel" string="Cancel"/>
+                        <button icon="terp-gtk-go-back-rtl" string="export file" name="execute_export" type="object"/>
+                    </group>
+                </form>
+            </field>
+        </record>
+
+        <record model="ir.actions.act_window" id="action_export_mindmap_view">
+            <field name="name">export mindmap map</field>
+            <field name="res_model">export.mindmap.wizard</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">form</field>
+            <field name="domain">[]</field>
+            <field name="context" eval="{'default_green_complexity': ref('anytracker.complexity_implementation_green'),
+                                          'default_orange_complexity': ref('anytracker.complexity_implementation_orange'),
+                                          'default_red_complexity': ref('anytracker.complexity_implementation_red'),
+                                        }" />
+            <field name="target">new</field>
+        </record>
+
+        <menuitem id="menu_export_mindmap_wizard"
+            parent="menu_configuration"
+            sequence="40"
+            action="action_export_mindmap_view"/>
+
+    </data>
+</openerp>
