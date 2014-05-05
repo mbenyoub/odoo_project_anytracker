@@ -15,7 +15,8 @@ class Stage(osv.Model):
         'description': fields.text('Description', translate=True),
         'state': fields.char('state', size=64, required=True),
         'method_id': fields.many2one('anytracker.method', 'Project method',
-                                     required=True, ondelete='cascade'),
+                                     ondelete='cascade'),
+        'project_id': fields.many2one('anytracker.ticket', 'Project'),
         'sequence': fields.integer('Sequence', help='Sequence'),
         'force_rating': fields.boolean(
             'Force rating', help='Forbid entering this stage without a rating on the ticket'),
@@ -97,6 +98,21 @@ class Ticket(osv.Model):
             else:
                 next_stage = stage_ids[stage_ids.index(stage_id)+1]
             self.write(cr, uid, [ticket.id], {'stage_id': next_stage}, context)
+
+    def create(self, cr, uid, values, context=None):
+        """ set stage_ids from method on create """
+        res = super(Ticket, self).create(cr, uid, values, context)
+        if 'method_id' in values:
+            # retrieving stages from the method
+            stage_ids = self._method_stages(
+                cr, uid, values['method_id'], context)
+            stage_ids = [s.id for s in stage_ids]
+            for stage in self.pool.get('anytracker.stage').browse(
+                    cr, uid, stage_ids):
+                self.pool.get('anytracker.stage').copy(
+                    cr, uid, stage.id,
+                    {'method_id': False, 'project_id': res})
+        return res
 
     def write(self, cr, uid, ids, values, context=None):
         """set children stages when writing stage_id
@@ -196,6 +212,11 @@ class Ticket(osv.Model):
         smallest = sorted(stages)[0][1] if len(stages) else False
         return smallest
 
+    def _method_stages(self, cr, uid, method_id, context=None):
+        stages = self.pool.get('anytracker.method').browse(
+            cr, uid, method_id).stage_ids
+        return stages
+
     def recompute_progress(self, cr, uid, ids, context=None):
         """recompute the overall progress of the ticket, based on subtickets.
         And recompute sub-nodes as well
@@ -237,6 +258,11 @@ class Ticket(osv.Model):
             'Stage',
             select=True,
             domain="[('method_id','=',method_id)]"),
+        'stage_ids': fields.one2many(
+            'anytracker.stage',
+            'project_id',
+            'Stages',
+            help="The stages associated to this project"),
         'progress': fields.float(
             'Progress',
             select=True,
