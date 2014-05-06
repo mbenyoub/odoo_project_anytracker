@@ -63,6 +63,11 @@
             <field name="has_deadline" invisible="1"/>
             <field name="deadline" attrs="{'invisible': ['|',('has_deadline','=',False),('parent_id','=',False)], 'required': [('has_deadline','=',True)]}"/>
         </xpath>
+        <xpath expr="//page[@string='Participants']" position="after">
+            <page string="Priorities" attrs="{'invisible': [('parent_id', '!=', False)]}" groups="anytracker.group_member">
+                <field name="priority_ids"/>
+            </page>
+        </xpath>
     </field>
 </record>
 

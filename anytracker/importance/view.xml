@@ -87,6 +87,11 @@
         <xpath expr="//group[@id='extend']" position="inside">
             <field name="importance_id" domain="[('method_id', '=', method_id)]" attrs="{'invisible': [('parent_id','=',False)]}" />
         </xpath>
+        <xpath expr="//page[@string='Participants']" position="after">
+            <page string="Importances" attrs="{'invisible': [('parent_id', '!=', False)]}" groups="anytracker.group_member">
+                <field name="importance_ids"/>
+            </page>
+        </xpath>
     </field>
 </record>
 
