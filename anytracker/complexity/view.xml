@@ -52,6 +52,11 @@
             </group>
             </page>
         </xpath>
+        <xpath expr="//page[@string='Participants']" position="after">
+            <page string="Complexities" attrs="{'invisible': [('parent_id', '!=', False)]}" groups="anytracker.group_member">
+                <field name="complexity_ids"/>
+            </page>
+        </xpath>
     </field>
 </record>
 

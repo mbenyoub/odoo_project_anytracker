@@ -263,6 +263,21 @@ class Ticket(osv.Model):
             'project_id',
             'Stages',
             help="The stages associated to this project"),
+        'complexity_ids': fields.one2many(
+            'anytracker.complexity',
+            'project_id',
+            'Complexities',
+            help="The complexities associated to this project"),
+        'importance_ids': fields.one2many(
+            'anytracker.importance',
+            'project_id',
+            'Importances',
+            help="The importances associated to this project"),
+        'priority_ids': fields.one2many(
+            'anytracker.priority',
+            'project_id',
+            'Priorities',
+            help="The priorities associated to this project"),
         'progress': fields.float(
             'Progress',
             select=True,

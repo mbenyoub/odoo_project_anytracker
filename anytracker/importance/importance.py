@@ -16,7 +16,9 @@ class Importance(osv.Model):
         'seq': fields.integer('Importance'),
         'active': fields.boolean('Active', help='if check, this object is always available'),
         'method_id': fields.many2one('anytracker.method', 'Method',
-                                     required=True, ondelete='cascade'),
+                                     ondelete='cascade'),
+        'project_id': fields.many2one('anytracker.ticket', 'Project',
+                                      ondelete='cascade'),
     }
 
     _defaults = {
@@ -41,6 +43,21 @@ class Ticket(osv.Model):
             _get_importance, method=True, string='Importance',
             type='integer', store=True),
     }
+
+    def create(self, cr, uid, values, context=None):
+        """ set importance_ids from method on create """
+        res = super(Ticket, self).create(cr, uid, values, context)
+        if 'method_id' in values:
+            # retrieving importances from the method
+            importance_ids = self.pool.get('anytracker.method').browse(
+                cr, uid, values['method_id'], context).importance_ids
+            importance_ids = [i.id for i in importance_ids]
+            for importance in self.pool.get('anytracker.importance').browse(
+                    cr, uid, importance_ids):
+                self.pool.get('anytracker.importance').copy(
+                    cr, uid, importance.id,
+                    {'method_id': False, 'project_id': res})
+        return res
 
 
 class Method(osv.Model):

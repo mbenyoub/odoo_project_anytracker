@@ -26,6 +26,8 @@ class Complexity(osv.Model):
         'color': fields.integer('Color'),
         'method_id': fields.many2one('anytracker.method', 'Project method',
                                      help='Projet method', ondelete='cascade'),
+        'project_id': fields.many2one('anytracker.ticket', 'Project',
+                                      help='Project', ondelete='cascade'),
         'risk': fields.float(
             'Risk', required=True,
             help="risk is a value between 0.0 (no risk) and 1.0 (full risk)"),
@@ -209,6 +211,16 @@ class Ticket(osv.Model):
         ticket_id = super(Ticket, self).create(cr, uid, values, context)
         if values.get('parent_id'):
             self.recompute_parents(cr, uid, values.get('parent_id'))
+        if 'method_id' in values:
+            # retrieving complexities from the method
+            complexity_ids = self.pool.get('anytracker.method').browse(
+                cr, uid, values['method_id'], context).complexity_ids
+            complexity_ids = [p.id for p in complexity_ids]
+            for complexity in self.pool.get('anytracker.complexity').browse(
+                    cr, uid, complexity_ids):
+                self.pool.get('anytracker.complexity').copy(
+                    cr, uid, complexity.id,
+                    {'method_id': False, 'project_id': ticket_id})
         return ticket_id
 
     def recompute_parents(self, cr, uid, ids):

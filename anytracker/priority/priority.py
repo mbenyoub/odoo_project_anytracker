@@ -17,7 +17,9 @@ class Priority(osv.Model):
         'seq': fields.integer('Priority', help='a low value is higher priority'),
         'active': fields.boolean('Active', help='if check, this object is always available'),
         'method_id': fields.many2one('anytracker.method', 'Method',
-                                     required=True, ondelete='cascade'),
+                                     ondelete='cascade'),
+        'project_id': fields.many2one('anytracker.ticket', 'Project',
+                                      ondelete='cascade'),
         'deadline': fields.boolean('Force to choose a deadline on the ticket?'),
         'date': fields.date('Milestone'),
     }
@@ -53,6 +55,21 @@ class Ticket(osv.Model):
             _get_priority, method=True, string='Priority',
             type='integer', store=True),
     }
+
+    def create(self, cr, uid, values, context=None):
+        """ set priority_ids from method on create """
+        res = super(Ticket, self).create(cr, uid, values, context)
+        if 'method_id' in values:
+            # retrieving priorities from the method
+            priority_ids = self.pool.get('anytracker.method').browse(
+                cr, uid, values['method_id'], context).priority_ids
+            priority_ids = [p.id for p in priority_ids]
+            for priority in self.pool.get('anytracker.priority').browse(
+                    cr, uid, priority_ids):
+                self.pool.get('anytracker.priority').copy(
+                    cr, uid, priority.id,
+                    {'method_id': False, 'project_id': res})
+        return res
 
 
 class Method(osv.Model):
