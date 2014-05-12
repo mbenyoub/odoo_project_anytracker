@@ -237,7 +237,6 @@ class Ticket(osv.Model):
                 return self.name_get(cr, uid, ticket_ids, context)
         return super(Ticket, self).name_search(cr, uid, name, args, operator=operator,
                                                context=context, limit=limit)
-
     _columns = {
         'name': fields.char('Title', 255, required=True),
         'number': fields.integer('Number'),

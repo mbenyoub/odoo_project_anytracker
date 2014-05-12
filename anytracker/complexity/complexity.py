@@ -183,7 +183,7 @@ class Ticket(osv.Model):
         if 'my_rating' in values or 'parent_id' in values:
             old_values = {v['id']: v for v in
                           self.read(cr, uid, ids, ['risk', 'rating', 'parent_id', 'project_id'],
-                          context, load='_classic_write')}
+                                    context, load='_classic_write')}
             old_parents = [v['parent_id'] for v in old_values.values()]
         res = super(Ticket, self).write(cr, uid, ids, values, context)
         if 'my_rating' in values or 'parent_id' in values:
