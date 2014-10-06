@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<openerp>
+<data>
+
+<!-- complexity form -->
+<record id="view_complexity_form" model="ir.ui.view">
+    <field name="name">anytracker.complexity.form</field>
+    <field name="model">anytracker.complexity</field>
+    <field name="priority" eval="8"/>
+    <field name="arch" type="xml">
+    <form string="Complexity">
+      <group col="2" colspan="2">
+        <group col="2" colspan="2">
+          <field name="name" select="1"/>
+          <field name="description"/>
+        </group>
+        <group col="2" colspan="2">
+          <field name="value"/>
+          <field name="color" />
+          <field name="method_id" widget="selection"/>
+          <field name="risk"/>
+        </group>
+      </group>
+    </form>
+    </field>
+</record>
+
+<!-- Add a tab in the ticket form -->
+<record id="ticket_view_form_with_complexity" model="ir.ui.view">
+    <field name="model">anytracker.ticket</field>
+    <field name="inherit_id" ref="ticket_view_form" />
+    <field name="arch" type="xml">
+        <xpath expr="//notebook/page[@string='Participants']" position="after">
+            <page string="Ratings" groups="anytracker.group_member">
+            <group col="6" colspan="4">
+                <field name="my_rating" attrs="{'invisible': [('child_ids', '!=', [])]}" groups="anytracker.group_member" options='{"quick_create": false}' domain="[('method_id','=',method_id)]"/>
+                <button string="Rate subtickets..." icon="gtk-execute" type="action" name="%(action_quickrating)d" attrs="{'invisible': [('child_ids', '=', [])]}" groups="anytracker.group_member"/>
+                <field name="risk" string="Risk level" readonly="1"/>
+                <button name="recompute_subtickets" string="Recompute risk and rating"
+                        type="object" icon="gtk-execute" attrs="{'invisible': [('child_ids', '=', [])]}" groups="anytracker.group_manager"/>
+
+            </group>
+            <group col="6" colspan="4" attrs="{'invisible': [('child_ids', '!=', [])]}">
+              <label for="rating_ids">Here are all the ratings made for this ticket:</label>
+              <field name="rating_ids" nolabel="1" colspan="4" readonly="1">
+                <tree string="Ratings">
+                  <field name="user_id"/>
+                  <field name="complexity_id"/>
+                  <field name="time"/>
+                </tree>
+              </field>
+            </group>
+            </page>
+        </xpath>
+    </field>
+</record>
+
+<!-- Add a tab in the method form -->
+<record id="method_view_form_with_complexities" model="ir.ui.view">
+    <field name="model">anytracker.method</field>
+    <field name="inherit_id" ref="view_method_form" />
+    <field name="arch" type="xml">
+        <xpath expr="//notebook" position="inside">
+            <page string="Complexities">
+                <div>Complexities correspond to the evaluation done by people. It can be a time length or another value without unit.</div>
+                <field name="complexity_ids">
+                    <tree>
+                        <field name="name"/>
+                        <field name="description"/>
+                        <field name="value"/>
+                        <field name="risk"/>
+                    </tree>
+                </field>
+            </page>
+        </xpath>
+    </field>
+</record>
+
+<record id="ticket_view_tree_with_complexity" model="ir.ui.view">
+    <field name="model">anytracker.ticket</field>
+    <field name="inherit_id" ref="ticket_view_tree" />
+    <field name="arch" type="xml">
+        <xpath expr="/tree/field[@name='shortened_description']" position="after">
+            <field name="my_rating"/>
+            <button string="Rate subtickets" icon="gtk-execute" type="action" name="%(action_quickrating)d"/>
+            <field name="risk" string="Risk level" />
+        </xpath>
+    </field>
+</record>
+
+<record id="tickets_hierarchy_with_complexity" model="ir.ui.view">
+    <field name="model">anytracker.ticket</field>
+    <field name="inherit_id" ref="tickets_hierarchy" />
+    <field name="arch" type="xml">
+        <xpath expr="/tree/field[@name='nb_children']" position="after">
+            <field name="risk" string="Risk"/>
+            <field name="rating" string="Rating"/>
+        </xpath>
+    </field>
+</record>
+
+<record id="tickets_kanban_complexity" model="ir.ui.view">
+    <field name="model">anytracker.ticket</field>
+    <field name="inherit_id" ref="anytracker.tickets_kanban2"/>
+    <field name="arch" type="xml">
+      <xpath expr="/kanban/field[last()]" position="after">
+        <field name="rating"/>
+      </xpath>
+      <xpath expr="//div[@class='oe_kanban_bottom_left']//a[last()]" position="after">
+          <t t-if="record.rating.raw_value != 0"><span style="margin: 0 0.5em"><field name="rating"/></span></t>
+      </xpath>
+    </field>
+</record>
+
+<!-- Add a column in stage tree -->
+<record id="view_method_stage_tab_with_force_rate" model="ir.ui.view">
+    <field name="model">anytracker.method</field>
+    <field name="inherit_id" ref="method_view_form_with_stages" />
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='progress']" position="after">
+        <field name="force_rating" string="Force rating"/>
+      </xpath>
+    </field>
+</record>
+
+</data>
+</openerp>
