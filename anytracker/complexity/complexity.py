@@ -120,11 +120,15 @@ class Ticket(osv.Model):
             for rating in sorted([(r.time, r.id, r.user_id, r.complexity_id.value)
                                   for r in ticket.rating_ids]):
                 latest_person_rating[rating[2]] = rating[-1]
+            # a rating or risk of False or None is skipped
+            latest_person_rating = dict([r for r in latest_person_rating.items()
+                                         if r[-1] not in (None, False)])
+            latest_person_risk = dict([r for r in latest_person_risk.items()
+                                       if r[-1] not in (None, False)])
             # compute the mean of all latest ratings
             res_risk[ticket.id] = (risk_mean(latest_person_risk.values())
                                    if latest_person_risk else 0.5)
-            res_rating[ticket.id] = (sum([r or 0.0 for r in
-                                          latest_person_rating.values()]
+            res_rating[ticket.id] = (sum(latest_person_rating.values()
                                          )/len(latest_person_rating)
                                      if latest_person_rating else 0)
         return res_risk, res_rating
@@ -135,6 +139,8 @@ class Ticket(osv.Model):
         """
         if not ids:
             return
+        if not hasattr(ids, '__iter__'):
+            ids = [ids]
         for ticket in self.browse(cr, uid, ids):
             if not ticket.child_ids:
                 risk, rating = self.compute_risk_and_rating(cr, uid, ticket.id)
@@ -283,3 +289,24 @@ class Method(osv.Model):
             'Complexities',
             help="The complexities associated to this method"),
     }
+
+    def copy(self, cr, uid, method_id, default, context=None):
+        """ Customize the method copy
+        """
+        stages = self.pool.get('anytracker.stage')
+        new_method_id = super(Method, self).copy(cr, uid, method_id, default, context)
+        # update forbidden complexities for new stages
+        for old_stage in self.browse(cr, uid, method_id).stage_ids:
+            new_stage_ids = stages.search(cr, uid, [('state', '=', old_stage.state),
+                                                    ('method_id', '=', new_method_id)])
+            if new_stage_ids:
+                new_stage = stages.browse(cr, uid, new_stage_ids[0])
+                # link to the equivalent forbidden complexities
+                old_cmplx_ids = [c.value for c in old_stage.forbidden_complexity_ids]
+                if not old_cmplx_ids:
+                    continue
+                equ_cmplx_ids = self.pool.get('anytracker.complexity').search(
+                    cr, uid, [('value', 'in', old_cmplx_ids),
+                              ('method_id', '=', new_stage.method_id.id)])
+                new_stage.write({'forbidden_complexity_ids': [(6, 0, equ_cmplx_ids)]})
+        return new_method_id

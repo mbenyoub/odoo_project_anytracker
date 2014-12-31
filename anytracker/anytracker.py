@@ -7,6 +7,18 @@ from lxml import etree
 from openerp.osv.orm import transfer_modifiers_to_node
 from openerp import SUPERUSER_ID
 logger = logging.getLogger(__file__)
+import re
+
+ticket_regex = re.compile('([Tt]icket ?#?)([\d]+)')
+
+
+def add_permalinks(cr, string):
+    # replace ticket numbers with permalinks
+    if not string:
+        return string
+    return ticket_regex.subn(
+        '<a href="/anytracker/%s/ticket/\\2">\\1\\2</a>' % cr.dbname,
+        string)[0]
 
 
 class Ticket(osv.Model):
@@ -114,12 +126,18 @@ class Ticket(osv.Model):
                 # set the project_id of me and all the children
                 children = self.search(cr, uid, [('id', 'child_of', ticket.id)])
                 super(Ticket, self).write(cr, uid, children, {'project_id': project_id})
+                self.recompute_subtickets(cr, uid, values['parent_id'])
         if 'active' in values:
             for ticket_id in ids:
                 children = self.search(cr, uid, [
                     ('id', 'child_of', ticket_id),
                     ('active', '=', not values['active'])])
                 super(Ticket, self).write(cr, uid, children, {'active': values['active']})
+
+        # replace ticket numbers with permalinks
+        if 'description' in values:
+            values['description'] = add_permalinks(cr, values['description'])
+
         res = super(Ticket, self).write(cr, uid, ids, values, context=context)
         if 'parent_id' in values:
             for ticket in self.browse(cr, uid, ids, context):
@@ -144,9 +162,21 @@ class Ticket(osv.Model):
             project_id = self.read(cr, uid, values['parent_id'],
                                    ['project_id'], load='_classic_write')['project_id']
             values['project_id'] = project_id
+
+        # replace ticket numbers with permalinks
+        if 'description' in values:
+            values['description'] = add_permalinks(cr, values['description'])
+
         ticket_id = super(Ticket, self).create(cr, uid, values, context=context)
-        if 'parent_id' not in values:
+
+        if not values.get('parent_id'):
             self.write(cr, uid, ticket_id, {'project_id': ticket_id})
+
+        # subscribe project members
+        participant_ids = self.browse(cr, uid, ticket_id).project_id.participant_ids
+        if participant_ids:
+            self.message_subscribe_users(cr, uid, [ticket_id], [p.id for p in participant_ids])
+
         return ticket_id
 
     def _default_parent_id(self, cr, uid, context=None):
@@ -237,6 +267,36 @@ class Ticket(osv.Model):
                 return self.name_get(cr, uid, ticket_ids, context)
         return super(Ticket, self).name_search(cr, uid, name, args, operator=operator,
                                                context=context, limit=limit)
+    def trash(self, cr, uid, ids, context=None):
+        """ Trash the ticket
+        set active = False, and move to the last stage
+        """
+        if not hasattr(ids, '__iter__'):
+            ids = [ids]
+        self.write(cr, uid, ids, {
+            'active': False,
+            'state': 'trashed',
+            'progress': 100.0,
+            'stage_id': False})
+        self.recompute_parents(cr, uid, ids)
+
+    def reactivate(self, cr, uid, ids, context=None):
+        """ reactivate a trashed ticket
+        """
+        if not hasattr(ids, '__iter__'):
+            ids = [ids]
+        self.write(cr, uid, ids, {'active': True, 'state': 'running'})
+        stages = self.pool.get('anytracker.stage')
+        for ticket in self.browse(cr, uid, ids):
+            start_ids = stages.search(cr, uid, [('method_id', '=', ticket.method_id.id),
+                                                ('progress', '=', 0)])
+            if len(start_ids) != 1:
+                raise osv.except_osv(_('Configuration error !'),
+                                     _('One and only one stage should have a 0% progress'))
+            # write stage in a separate line to let it recompute progress and risk
+            ticket.write({'stage_id': start_ids[0]})
+        self.recompute_parents(cr, uid, ids)
+
     _columns = {
         'name': fields.char('Title', 255, required=True),
         'number': fields.integer('Number'),
@@ -302,6 +362,11 @@ class Ticket(osv.Model):
         'sequence': fields.integer('sequence'),
         'active': fields.boolean('Active', help=("Uncheck to make the project disappear, "
                                                  "instead of deleting it")),
+        'state': fields.selection(
+            [('running', 'Running'),
+             ('trashed', 'Trashed')],
+            'State',
+            required=True),
         'has_attachment': fields.function(
             _has_attachment,
             type='boolean',
@@ -314,6 +379,7 @@ class Ticket(osv.Model):
         'duration': 0,
         'parent_id': _default_parent_id,
         'active': True,
+        'state': 'running',
     }
 
     _sql_constraints = [('number_uniq', 'unique(number)', 'Number must be unique!')]
@@ -342,3 +408,12 @@ class ResPartner(osv.Model):
             obj='res.users',
             method=True),
     }
+
+
+class MailMessage(osv.Model):
+    _inherit = 'mail.message'
+
+    def create(self, cr, uid, values, context=None):
+        if values.get('model') == 'anytracker.ticket' and 'body' in values:
+            values['body'] = add_permalinks(cr, values['body'])
+        return super(MailMessage, self).create(cr, uid, values, context)

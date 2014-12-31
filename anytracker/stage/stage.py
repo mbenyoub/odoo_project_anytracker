@@ -2,6 +2,7 @@
 from openerp.osv import osv
 from openerp.osv import fields
 from tools.translate import _
+from openerp import SUPERUSER_ID
 
 
 class Stage(osv.Model):
@@ -50,18 +51,30 @@ class Ticket(osv.Model):
         """return all stage names for the group_by directive, so that the kanban
         has all columns even if there is no ticket in a stage.
         """
+        access_rights_uid = access_rights_uid or uid
         # XXX improve the filter to handle categories
-        stage_osv = self.pool.get('anytracker.stage')
-        ticket_pool = self.pool.get('anytracker.ticket')
-        project_id = ticket_pool.browse(cr, uid, context.get('active_id')).project_id
+        stages = self.pool.get('anytracker.stage')
+        tickets = self.pool.get('anytracker.ticket')
+        active_id = tickets.browse(cr, uid, context.get('active_id'))
+        project_id = active_id.project_id
         if not project_id:
-            return [], []
+            return [], {}
         method = project_id.method_id
         if not method:
-            return [], []
-        stage_ids = stage_osv.search(cr, uid, [('method_id', '=', method.id)], context=context)
-        stage_names = stage_osv.name_get(cr, access_rights_uid, stage_ids, context=context)
-        return stage_names, dict([(i, False) for i in ids])  # all unfolded
+            return [], {}
+        stage_ids = stages.search(cr, uid, [('method_id', '=', method.id)], context=context)
+        stages_data = stages.read(cr, access_rights_uid, stage_ids,
+                                  ['name', 'groups_allowed'], context=context)
+        groups = set(self.user_base_groups(cr, uid))
+        # we only fold empty and forbidden columns (TODO: replace progress with state)
+        folds = {
+            s['id']:
+            bool(s['groups_allowed']
+                 and not groups.intersection(set(s['groups_allowed']))
+                 and not tickets.search(cr, uid, [('stage_id', '=', s['id']),
+                                                  ('id', 'child_of', active_id.id)]))
+            for s in stages_data}
+        return [(s['id'], s['name']) for s in stages_data], folds
 
     def stage_previous(self, cr, uid, ids, context=None):
         """move the ticket to the previous stage
@@ -100,53 +113,41 @@ class Ticket(osv.Model):
             self.write(cr, uid, [ticket.id], {'stage_id': next_stage}, context)
 
     def create(self, cr, uid, values, context=None):
-        """ set stage_ids from method on create """
-        res = super(Ticket, self).create(cr, uid, values, context)
-        if 'method_id' in values:
-            # retrieving stages from the method
-            stage_ids = self._method_stages(
-                cr, uid, values['method_id'], context)
-            stage_ids = [s.id for s in stage_ids]
-            for stage in self.pool.get('anytracker.stage').browse(
-                    cr, uid, stage_ids):
-                self.pool.get('anytracker.stage').copy(
-                    cr, uid, stage.id,
-                    {'method_id': False, 'project_id': res})
-        return res
+        """select the default stage if parent is selected lately
+        """
+        if not values.get('stage_id') and values.get('parent_id'):
+            method = self.browse(cr, uid, values.get('parent_id')).method_id
+            values['stage_id'] = method.get_first_stage()[method.id]
+        return super(Ticket, self).create(cr, uid, values, context)
+
+    def user_base_groups(self, cr, uid):
+        """ return the base (not implied) groups of the uid
+        """
+        cr.execute('select gu.gid from res_groups_users_rel gu, res_users u '
+                   'where u.id=gu.uid and u.id=%s '
+                   'EXCEPT select gi.hid '
+                   'from res_groups_implied_rel gi, res_groups_users_rel gu, res_users u '
+                   'where u.id=gu.uid and u.id=%s and gu.gid=gi.gid;', (uid, uid))
+        return [i[0] for i in cr.fetchall()]
 
     def write(self, cr, uid, ids, values, context=None):
-        """set children stages when writing stage_id
+        """set permission and children stages when writing stage_id
         """
+        # check we can do this
+        stage_id = values.get('stage_id')
+        if stage_id and uid != SUPERUSER_ID:
+            stages = self.pool.get('anytracker.stage')
+            stage_groups = set(stages.read(cr, uid, values['stage_id'], ['groups_allowed'],
+                                           load='_classic_write')['groups_allowed'])
+            user_groups = set(self.user_base_groups(cr, uid))
+            if stage_groups and not stage_groups.intersection(user_groups):
+                raise osv.except_osv("Operation forbidden",
+                                     "You can't move this ticket to this stage")
+
         # save the previous progress
         if 'stage_id' in values:
-            # retrieving authorized groups for this stage
-            groups_allowed = self.pool.get('anytracker.stage').read(
-                cr, uid, values['stage_id'],
-                ['groups_allowed'], load='_classic_write')['groups_allowed']
-            if groups_allowed:
-                # check if the user is in the right group to move the ticket to this stage
-                browse_user = self.pool.get('res.users').browse(
-                    cr, uid, uid)
-                # retrieving user whole groups
-                groups_ids = browse_user.groups_id
-                parent_groups = None
-                # loop through groups to only keep parent ones
-                for group in groups_ids:
-                    if not parent_groups:
-                        parent_groups = set(groups_ids)
-                    if not group.implied_ids:
-                        continue
-                    # remove imply group id from parent_groups
-                    for imp_gr in group.implied_ids:
-                        parent_groups.discard(imp_gr)
-                user_groups = [ug.id for ug in parent_groups]
-                if not set(user_groups).intersection(set(groups_allowed)) and uid != 1:
-                    raise osv.except_osv('Operation forbidden',
-                                         'You don\'t have the permission to move ticket '
-                                         'to this stage')
-
-            old_progress = dict([(t.id, t.stage_id.progress)
-                                 for t in self.browse(cr, uid, ids, context)])
+            old_progress = {t.id: t.stage_id.progress
+                            for t in self.browse(cr, uid, ids, context)}
 
         res = super(Ticket, self).write(cr, uid, ids, values, context=context)
 
@@ -155,23 +156,16 @@ class Ticket(osv.Model):
         if not stage_id:
             return res
 
-        # set all children stage at once
         if not hasattr(ids, '__iter__'):
             ids = [ids]
         for ticket in self.browse(cr, uid, ids, context):
-            method = ticket.project_id.method_id
-            # TODO: replace with a configurable wf?
+            # check stage enforcements
             stage = self.pool.get('anytracker.stage').browse(cr, uid, stage_id, context)
-            if method.code == ('implementation'
-                               and not ticket.my_rating
-                               and stage.force_rating
-                               and not ticket.child_ids):
+            if not ticket.rating_ids and stage.force_rating and not ticket.child_ids:
                 raise osv.except_osv(_('Warning !'),
                                      _('You must rate the ticket "%s" to enter the "%s" stage'
                                        % (ticket.name, stage.name)))
-            if method.code == ('implementation'
-                               and ticket.my_rating.id
-                               in [i.id for i in (stage.forbidden_complexity_ids or [])]):
+            if ticket.my_rating.id in [i.id for i in (stage.forbidden_complexity_ids or [])]:
                     raise osv.except_osv(
                         _('Warning !'),
                         _('The ticket "%s" is rated "%s" so it cannot enter this stage'
@@ -190,6 +184,8 @@ class Ticket(osv.Model):
                 child_ids = self.search(cr, uid, [('id', 'child_of', parent.id),
                                                   ('child_ids', '=', False),
                                                   ('id', '!=', parent.id)])
+                if ticket.id not in child_ids:
+                    child_ids.append(ticket.id)
                 progression = (ticket.stage_id.progress
                                - (old_progress[ticket.id]or 0.0)) / len(child_ids)
                 new_progress = parent.progress + progression
@@ -205,12 +201,8 @@ class Ticket(osv.Model):
         active_id = context.get('active_id')
         if not active_id:
             return False
-        stages = [(s.progress, s.id)
-                  for s in self.pool.get('anytracker.ticket').browse(
-                      cr, uid, context.get('active_id')).method_id.stage_ids
-                  ]
-        smallest = sorted(stages)[0][1] if len(stages) else False
-        return smallest
+        method = self.browse(cr, uid, context.get('active_id')).method_id
+        return method.get_first_stage()[method.id]
 
     def _method_stages(self, cr, uid, method_id, context=None):
         stages = self.pool.get('anytracker.method').browse(
@@ -250,7 +242,7 @@ class Ticket(osv.Model):
         return True
 
     def _constant_one(self, cr, uid, ids, *a, **kw):
-        return dict((i, 1) for i in ids)
+        return {i: 1 for i in ids}
 
     _columns = {
         'stage_id': fields.many2one(
@@ -258,26 +250,6 @@ class Ticket(osv.Model):
             'Stage',
             select=True,
             domain="[('method_id','=',method_id)]"),
-        'stage_ids': fields.one2many(
-            'anytracker.stage',
-            'project_id',
-            'Stages',
-            help="The stages associated to this project"),
-        'complexity_ids': fields.one2many(
-            'anytracker.complexity',
-            'project_id',
-            'Complexities',
-            help="The complexities associated to this project"),
-        'importance_ids': fields.one2many(
-            'anytracker.importance',
-            'project_id',
-            'Importances',
-            help="The importances associated to this project"),
-        'priority_ids': fields.one2many(
-            'anytracker.priority',
-            'project_id',
-            'Priorities',
-            help="The priorities associated to this project"),
         'progress': fields.float(
             'Progress',
             select=True,
@@ -311,3 +283,11 @@ class Method(osv.Model):
             'Stages',
             help="The stages associated to this method"),
     }
+
+    def get_first_stage(self, cr, uid, ids, context=None):
+        """ Return the id of the first stage of a method"""
+        res = {}
+        for method in self.browse(cr, uid, ids, context):
+            stages = [(s.progress, s.id) for s in method.stage_ids]
+            res[method.id] = sorted(stages)[0][1] if len(stages) else False
+        return res

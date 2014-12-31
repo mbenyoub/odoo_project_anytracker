@@ -21,6 +21,7 @@ class TestAnytracker(SharedSetupTransactionCase):
             cr, uid,
             {'name': 'Member',
              'login': 'member',
+             'email': 'member@localhost',
              'groups_id': [(6, 0,
                            [self.ref('anytracker.group_member'),
                             self.ref('base.group_user')])]})
@@ -28,6 +29,7 @@ class TestAnytracker(SharedSetupTransactionCase):
             cr, uid,
             {'name': 'Manager',
              'login': 'manager',
+             'email': 'manager@localhost',
              'groups_id': [(6, 0,
                            [self.ref('base.group_user'),
                             self.ref('anytracker.group_manager')])]})
@@ -35,23 +37,32 @@ class TestAnytracker(SharedSetupTransactionCase):
             cr, uid,
             {'name': 'Customer',
              'login': 'customer',
+             'email': 'customer@localhost',
              'groups_id': [(6, 0,
                            [self.ref('anytracker.group_customer')])]})
 
-    def test_name_search(self):
+    def test_name_search_and_autosubscribe(self):
         """
             Test the name_search function in anytracker.ticket module.
-            We may be able to find a ticket from his name or number
+            We may be able to find a ticket from his name or number.
+            Also test that project members are subscribed to the openchatter
         """
         cr, uid = self.cr, self.uid
-        # Create a ticket
+        # Create a project and a project
         project_id = self.tickets.create(
             cr, uid,
             {'name': 'Test1',
              'participant_ids': [(6, 0, [self.customer_id, self.member_id, self.manager_id])],
              'method_id': self.ref('anytracker.method_test')})
+        # check project_id attribute exists
+        self.assertEquals(self.tickets.browse(cr, uid, project_id).project_id.id, project_id)
+
         ticket_id = self.tickets.create(
             cr, uid, {'name': 'Test simple ticket', 'parent_id': project_id, })
+
+        # we check that there are 4 subscribers (uid/admin + the 3 project members)
+        followers = [f.id for f in self.tickets.browse(cr, uid, ticket_id).message_follower_ids]
+        self.assertEquals(len(followers), 4)
 
         # get his number
         ticket_number = self.tickets.read(cr, uid, ticket_id, ['number'])['number']
@@ -101,7 +112,7 @@ class TestAnytracker(SharedSetupTransactionCase):
         """ Check attachment creation, deletion and access
         """
         cr, uid = self.cr, self.uid
-        # create two projects, one with customer, on without
+        # create a project
         project_id = self.tickets.create(
             cr, uid,
             {'name': 'Attachment test',
@@ -298,20 +309,40 @@ class TestAnytracker(SharedSetupTransactionCase):
         self.assertEquals(self.tickets.browse(cr, uid, ticket1_id).method_id.name, 'Test2')
 
         # Recreated the project1 and move the whole node3 at once
-        project_id = self.tickets.create(
+        project1_id = self.tickets.create(
             cr, self.manager_id,
             {'name': 'Project1',
              'participant_ids': [(6, 0, [self.customer_id, self.member_id, self.manager_id])],
              'method_id': self.ref('anytracker.method_test')})
 
-        self.tickets.write(cr, self.manager_id, node3_id, {'parent_id': project_id})
-        self.assertEquals(self.tickets.browse(cr, uid, node3_id).project_id.id, project_id)
-        self.assertEquals(self.tickets.browse(cr, uid, ticket1_id).project_id.id, project_id)
-        self.assertEquals(self.tickets.browse(cr, uid, ticket2_id).project_id.id, project_id)
+        self.tickets.write(cr, self.manager_id, node3_id, {'parent_id': project1_id})
+        self.assertEquals(self.tickets.browse(cr, uid, node3_id).project_id.id, project1_id)
+        self.assertEquals(self.tickets.browse(cr, uid, ticket1_id).project_id.id, project1_id)
+        self.assertEquals(self.tickets.browse(cr, uid, ticket2_id).project_id.id, project1_id)
         self.assertEquals(self.tickets.browse(cr, uid, node3_id).method_id.name, 'Test')
         self.assertEquals(self.tickets.browse(cr, uid, ticket1_id).method_id.name, 'Test')
 
         # we change the method of the project1
-        self.tickets.write(cr, uid, project_id, {'method_id': self.ref('anytracker.method_test2')})
+        self.tickets.write(cr, uid, project1_id,
+                           {'method_id': self.ref('anytracker.method_test2')})
         self.assertEquals(self.tickets.browse(cr, uid, node3_id).method_id.name, 'Test2')
         self.assertEquals(self.tickets.browse(cr, uid, ticket1_id).method_id.name, 'Test2')
+
+        # we trash the ticket1
+        self.assertEquals(self.tickets.browse(cr, uid, project1_id).risk, 0.5)
+        self.assertEquals(self.tickets.browse(cr, uid, project1_id).rating, 0.0)
+        self.assertEquals(self.tickets.browse(cr, uid, project1_id).progress, 0.0)
+        # rate the ticket1
+        self.tickets.write(cr, uid, ticket1_id, {'my_rating': self.ref('anytracker.complexity7')})
+        self.assertEquals(self.tickets.browse(cr, uid, ticket1_id).rating, 4.5)
+        self.assertEquals(self.tickets.browse(cr, uid, ticket1_id).risk, 0.45)
+        self.assertEquals(self.tickets.browse(cr, uid, ticket1_id).progress, 5.0)
+        self.assertEquals(self.tickets.browse(cr, uid, project1_id).risk, 0.475595575914924)
+        self.assertEquals(self.tickets.browse(cr, uid, project1_id).rating, 4.5)
+        self.assertEquals(self.tickets.browse(cr, uid, project1_id).progress, 0.0)
+        # trash the ticket1 and check that the risk, rating and progress of the project is updated
+        self.tickets.trash(cr, uid, ticket1_id)
+        self.assertEquals(self.tickets.browse(cr, uid, ticket1_id).progress, 100.0)
+        self.assertEquals(self.tickets.browse(cr, uid, project1_id).risk, 0.5)
+        self.assertEquals(self.tickets.browse(cr, uid, project1_id).rating, 0.0)
+        self.assertEquals(self.tickets.browse(cr, uid, project1_id).progress, 0.0)

@@ -6,7 +6,7 @@ from openerp.osv import fields
 class Priority(osv.Model):
     """Priorities represent the timeframe to do tasks.
     It can represent timeboxes, deadlines, milestones
-    TODO : define by project, add milestone
+    TODO : add milestone
     """
     _name = 'anytracker.priority'
     _description = 'Priority of Ticket by method'
@@ -41,6 +41,8 @@ class Ticket(osv.Model):
         return res
 
     def onchange_priority(self, cr, uid, ids, prio_id=None, context=None):
+        if not prio_id:
+            return {}
         priority_obj = self.pool.get('anytracker.priority')
         priority = priority_obj.read(cr, uid, prio_id, ['deadline'])
         if priority['deadline']:

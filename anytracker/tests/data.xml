@@ -73,6 +73,7 @@
         <field name="method_id" ref="method_test"/>
         <field name="sequence">20</field>
         <field name="progress">20.0</field>
+        <field name="forbidden_complexity_ids" eval="[(6,0,[ref('complexity3')])]"/>
     </record>
     <record id="stage_test_done" model="anytracker.stage">
         <field name="name">Done</field>
@@ -138,6 +139,8 @@
         <field name="method_id" ref="method_test2"/>
         <field name="sequence">6</field>
         <field name="progress">6.0</field>
+        <field name="force_rating">1</field>
+        <field name="forbidden_complexity_ids" eval="[(6,0,[ref('complexity8')])]"/>
     </record>
     <record id="stage_test_doing2" model="anytracker.stage">
         <field name="name">Doing2</field>
@@ -152,6 +155,30 @@
         <field name="method_id" ref="method_test2"/>
         <field name="sequence">100</field>
         <field name="progress">100.0</field>
+    </record>
+    <!-- test priorities -->
+    <record id="discount_urgent" model="hr_timesheet_invoice.factor">
+        <field name="name">+180%</field>
+        <field name="factor">-80</field>
+    </record>
+    <record id="discount_prio" model="hr_timesheet_invoice.factor">
+        <field name="name">+140%</field>
+        <field name="factor">-40</field>
+    </record>
+    <record id="test_prio_urgent" model="anytracker.priority">
+        <field name="method_id" ref="method_test"/>
+        <field name="name">URGENT</field>
+        <field name="discount_id" ref="discount_urgent"/>
+    </record>
+    <record id="test_prio_prio" model="anytracker.priority">
+        <field name="method_id" ref="method_test"/>
+        <field name="name">PRIORITY</field>
+        <field name="discount_id" ref="discount_prio"/>
+    </record>
+    <record id="test_prio_normal" model="anytracker.priority">
+        <field name="method_id" ref="method_test"/>
+        <field name="name">NORMAL</field>
+        <field name="discount_id" ref="hr_timesheet_invoice.timesheet_invoice_factor1"/>
     </record>
   </data>
 </openerp>
