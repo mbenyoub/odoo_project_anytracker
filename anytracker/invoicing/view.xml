@@ -8,9 +8,9 @@
     <field name="inherit_id" ref="anytracker.ticket_view_form"/>
     <field name="arch" type="xml">
         <xpath expr="//notebook//page[last()]" position="after">
-            <page string="Invoicing" groups="anytracker.group_manager">
+            <page string="Invoicing" groups="anytracker.group_member">
                 <group>
-                <group>
+                <group attrs="{'invisible': ['|', ('parent_id','=',False), ('child_ids','!=',())]}">
                 <label for="create_analytic_line"
                        string="Analytic line"
                        attrs="{'invisible': [('analytic_line_id','!=',False)]}"/>
@@ -25,13 +25,10 @@
                        nolabel="1"
                        attrs="{'invisible': [('analytic_line_id','=',False)]}"/>
                 </group>
-                <group>
-                <field name="analytic_account_id"
-                       attrs="{'invisible': [('parent_id','!=',False)]}"/>
-                <field name="product_id"
-                       attrs="{'invisible': [('parent_id','!=',False)]}"/>
-                <field name="analytic_journal_id"
-                       attrs="{'invisible': [('parent_id','!=',False)]}"/>
+                <group attrs="{'invisible': [('parent_id','!=',False)]}">
+                <field name="analytic_account_id"/>
+                <field name="product_id"/>
+                <field name="analytic_journal_id"/>
                 </group>
                 </group>
             </page>
@@ -44,20 +41,49 @@
     <field name="model">anytracker.bouquet</field>
     <field name="inherit_id" ref="anytracker.bouquet_form"/>
     <field name="arch" type="xml">
-        <xpath expr="//field[@name='ticket_ids']" position="inside">
-            <label for="create_analytic_line"
-                   string="Create invoicing lines"
-                   groups="anytracker.group_manager"/>
+        <xpath expr="//field[@name='ticket_ids']" position="after">
             <button name="create_analytic_lines"
                     type="object"
-                    string="Create"
-                    groups="anytracker.group_manager"/>
+                    string="Create invoicing lines"
+                    groups="anytracker.group_member"/>
         </xpath>
         <xpath expr="//tree//field[@name='number']" position="before">
             <field name="analytic_line_id" widget="boolean" string="Invoiced?" groups="anytracker.group_member"/>
         </xpath>
     </field>
 </record>
+
+<!-- Modify the unfinished filter to display uninvoiced tickets -->
+<record id="invoicing_ticket_view_search" model="ir.ui.view">
+    <field name="model">anytracker.ticket</field>
+    <field name="inherit_id" ref="anytracker.ticket_view_search"/>
+    <field name="arch" type="xml">
+        <xpath expr="//filter[@name='unfinished']" position="attributes">
+            <attribute name="domain">['|', ('progress', '&lt;', 100.0), '&amp;', '&amp;', ('analytic_line_id', '=', False), ('project_id.analytic_journal_id', '!=', False), ('rating', '>', 0)]</attribute>
+        </xpath>
+    </field>
+</record>
+
+<!-- add invoicing ratio to priorities -->
+<record id="priority_form_with_invoicing" model="ir.ui.view">
+    <field name="model">anytracker.priority</field>
+    <field name="inherit_id" ref="anytracker.view_anytracker_priority_form"/>
+    <field name="arch" type="xml">
+        <field name="deadline" position="after">
+            <field name="discount_id"/>
+        </field>
+    </field>
+</record>
+<record id="priority_tree_with_invoicing" model="ir.ui.view">
+    <field name="model">anytracker.method</field>
+    <field name="inherit_id" ref="anytracker.method_view_form_with_priorities"/>
+    <field name="arch" type="xml">
+        <field name="deadline" position="after">
+            <field name="discount_id"/>
+        </field>
+    </field>
+</record>
+
 
 </data>
 </openerp>

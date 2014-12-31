@@ -67,6 +67,7 @@
     <field name="arch" type="xml">
         <xpath expr="//notebook" position="inside">
             <page string="Complexities">
+                <div>Complexities correspond to the evaluation done by people. It can be a time length or another value without unit.</div>
                 <field name="complexity_ids">
                     <tree>
                         <field name="name"/>
@@ -80,12 +81,23 @@
     </field>
 </record>
 
-<record id="ticket_view_tree_with_complexity" model="ir.ui.view">
+<!-- Add fields in the list -->
+<record id="ticket_tree_with_complexity" model="ir.ui.view">
     <field name="model">anytracker.ticket</field>
-    <field name="inherit_id" ref="ticket_view_tree" />
+    <field name="inherit_id" ref="ticket_tree" />
     <field name="arch" type="xml">
-        <xpath expr="/tree/field[@name='shortened_description']" position="after">
-            <field name="my_rating"/>
+        <xpath expr="/tree/field[@name='breadcrumb']" position="after">
+            <field name="rating"/>
+            <field name="risk" string="Risk level" />
+        </xpath>
+    </field>
+</record>
+<record id="node_tree_with_complexity" model="ir.ui.view">
+    <field name="model">anytracker.ticket</field>
+    <field name="inherit_id" ref="node_view_tree" />
+    <field name="arch" type="xml">
+        <xpath expr="/tree/field[@name='breadcrumb']" position="after">
+            <field name="rating"/>
             <button string="Rate subtickets" icon="gtk-execute" type="action" name="%(action_quickrating)d"/>
             <field name="risk" string="Risk level" />
         </xpath>
@@ -112,6 +124,17 @@
       </xpath>
       <xpath expr="//div[@class='oe_kanban_bottom_left']//a[last()]" position="after">
           <t t-if="record.rating.raw_value != 0"><span style="margin: 0 0.5em"><field name="rating"/></span></t>
+      </xpath>
+    </field>
+</record>
+
+<!-- Add a column in stage tree -->
+<record id="view_method_stage_tab_with_force_rate" model="ir.ui.view">
+    <field name="model">anytracker.method</field>
+    <field name="inherit_id" ref="method_view_form_with_stages" />
+    <field name="arch" type="xml">
+      <xpath expr="//field[@name='progress']" position="after">
+        <field name="force_rating" string="Force rating"/>
       </xpath>
     </field>
 </record>

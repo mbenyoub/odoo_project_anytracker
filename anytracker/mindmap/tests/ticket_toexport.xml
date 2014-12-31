@@ -3,7 +3,7 @@
     <record model="anytracker.ticket" id="anytracker_ticket-droit_dacces_application_mlf">
       <field name="active" eval="True"/>
       <field name="created_mindmap">2013-04-05 13:34:20</field>
-      <field name="description" eval="False"/>
+      <field name="description">Descr for ID_900637744</field>
       <field name="id_mindmap">ID_900637744</field>
       <field name="method_id" ref="anytracker.method_maintenance"/>
       <field name="modified_mindmap">2014-04-01 15:58:24</field>
@@ -13,13 +13,12 @@
       <field name="parent_id" eval="False"/>
       <field name="parent_left" eval="1"/>
       <field name="parent_right" eval="12"/>
-      <field name="permalink">/anytracker/any/ticket/1</field>
       <field name="stage_id" ref="anytracker.stage_maintenance_new"/>
     </record>
     <record model="anytracker.ticket" id="anytracker_ticket-worflows_general_des_budgets">
       <field name="active" eval="True"/>
       <field name="created_mindmap">2013-04-05 13:34:35</field>
-      <field name="description" eval="False"/>
+      <field name="description">Descr for ID_1748422440</field>
       <field name="id_mindmap">ID_1748422440</field>
       <field name="method_id" ref="anytracker.method_maintenance"/>
       <field name="modified_mindmap">2013-04-05 15:44:20</field>
@@ -29,7 +28,6 @@
       <field name="parent_id" ref="anytracker.anytracker_ticket-droit_dacces_application_mlf"/>
       <field name="parent_left" eval="2"/>
       <field name="parent_right" eval="5"/>
-      <field name="permalink">/anytracker/any/ticket/2</field>
       <field name="stage_id" ref="anytracker.stage_maintenance_new"/>
     </record>
     <record model="anytracker.ticket" id="anytracker_ticket-worlflow_sur_analytic_budget">
@@ -46,7 +44,6 @@ BrouillonVerrouill&#233; : le passage est effectu&#233; par le personnel de l'et
       <field name="parent_id" ref="anytracker.anytracker_ticket-worflows_general_des_budgets"/>
       <field name="parent_left" eval="3"/>
       <field name="parent_right" eval="4"/>
-      <field name="permalink">/anytracker/any/ticket/3</field>
       <field name="stage_id" ref="anytracker.stage_maintenance_new"/>
     </record>
     <record model="anytracker.ticket" id="anytracker_ticket-profils_utilisateurs_ets_et/ou_siege_(atelier)">
@@ -71,7 +68,6 @@ Si&#232;ge:
       <field name="parent_id" ref="anytracker.anytracker_ticket-droit_dacces_application_mlf"/>
       <field name="parent_left" eval="6"/>
       <field name="parent_right" eval="11"/>
-      <field name="permalink">/anytracker/any/ticket/4</field>
       <field name="stage_id" ref="anytracker.stage_maintenance_new"/>
     </record>
     <record model="anytracker.ticket" id="anytracker_ticket-condition_de_passage_de_workflow">
@@ -88,7 +84,6 @@ Si&#232;ge:
       <field name="parent_id" ref="anytracker.anytracker_ticket-profils_utilisateurs_ets_et/ou_siege_(atelier)"/>
       <field name="parent_left" eval="7"/>
       <field name="parent_right" eval="8"/>
-      <field name="permalink">/anytracker/any/ticket/5</field>
       <field name="stage_id" ref="anytracker.stage_maintenance_new"/>
     </record>
     <record model="anytracker.ticket" id="anytracker_ticket-creer_un_abstract_model_de_protection_de_model">
@@ -105,7 +100,6 @@ Si&#232;ge:
       <field name="parent_id" ref="anytracker.anytracker_ticket-profils_utilisateurs_ets_et/ou_siege_(atelier)"/>
       <field name="parent_left" eval="9"/>
       <field name="parent_right" eval="10"/>
-      <field name="permalink">/anytracker/any/ticket/6</field>
       <field name="stage_id" ref="anytracker.stage_maintenance_new"/>
     </record>
   </data>
